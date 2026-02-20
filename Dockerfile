@@ -83,6 +83,24 @@ ENV BUN_INSTALL_NODE=0 \
     BUN_INSTALL="/data/.bun" \
     PATH="/usr/local/go/bin:/data/.bun/bin:/data/.bun/install/global/bin:$PATH"
 
+# Ensure /data exists for installer target
+RUN mkdir -p /data/.bun
+
+# Install Bun
+RUN curl -fsSL https://bun.sh/install | bash
+
+# Make bun always reachable (regardless of install path quirks)
+RUN if [ -x /data/.bun/bin/bun ]; then \
+      ln -sf /data/.bun/bin/bun /usr/local/bin/bun; \
+    elif [ -x /root/.bun/bin/bun ]; then \
+      ln -sf /root/.bun/bin/bun /usr/local/bin/bun; \
+    else \
+      echo "bun binary not found after install"; exit 1; \
+    fi
+
+# Hard fail early if bun isn't callable
+RUN bun --version
+
 # Install Bun
 RUN curl -fsSL https://bun.sh/install | bash
 
